@@ -9,10 +9,10 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Injectable()
 export class AuthService {
-    constructor( 
-        private prisma : PrismaService,
-        private jwt : JwtService
-    ) {}
+    constructor(
+        private prisma: PrismaService,
+        private jwt: JwtService
+    ) { }
 
     async login(dto: AuthDto) {
         const user = await this.validateUser(dto)
@@ -20,26 +20,26 @@ export class AuthService {
 
 
         return {
-            user: this.returnUserFields(user) ,
+            user: this.returnUserFields(user),
             ...tokens
         }
     }
 
     async getNewTokens(refreshToken: string) {
         const result = await this.jwt.verifyAsync(refreshToken)
-        if(!result) throw new UnauthorizedException('Invalid refresh token')
+        if (!result) throw new UnauthorizedException('Invalid refresh token')
 
         const user = await this.prisma.user.findUnique({
             where: {
                 id: result.id
             }
-        })    
+        })
 
         const tokens = await this.issueTokens(user.id)
 
 
         return {
-            user: this.returnUserFields(user) ,
+            user: this.returnUserFields(user),
             ...tokens
         }
     }
@@ -61,13 +61,13 @@ export class AuthService {
                 phone: faker.phone.number(),
                 password: await hash(dto.password)
             }
-        })   
-        
+        })
+
         const tokens = await this.issueTokens(user.id)
 
 
         return {
-            user: this.returnUserFields(user) ,
+            user: this.returnUserFields(user),
             ...tokens
         }
     }
@@ -83,29 +83,29 @@ export class AuthService {
             expiresIn: '7d'
         })
 
-        return { accessToken , refreshToken }
+        return { accessToken, refreshToken }
     }
 
-    private returnUserFields(user: User){
+    private returnUserFields(user: User) {
         return {
             id: user.id,
             email: user.email
         }
     }
 
-    private async validateUser(dto:AuthDto) {
+    private async validateUser(dto: AuthDto) {
         const user = await this.prisma.user.findUnique({
             where: {
                 email: dto.email
             }
         })
 
-        if(!user) throw new NotFoundException('User not found')
+        if (!user) throw new NotFoundException('User not found')
 
-        const isValid = await verify(user.password , dto.password)
+        const isValid = await verify(user.password, dto.password)
 
-        if(!isValid) throw new UnauthorizedException('Invalid Password')
-        
+        if (!isValid) throw new UnauthorizedException('Invalid Password')
+
         return user
     }
 }
